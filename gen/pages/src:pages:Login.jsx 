@@ -1,0 +1,72 @@
+import React, { useState } from 'react';
+import { useNavigate, Link } from 'react-router-dom';
+import { motion } from 'framer-motion';
+import { useAuth } from '@/context/AuthContext';
+import { Button } from '@/components/ui/button';
+import { toast } from '@/components/ui/use-toast';
+
+const Login = () => {
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const { login } = useAuth();
+  const navigate = useNavigate();
+
+  const handleLogin = (e) => {
+    e.preventDefault();
+    const success = login(email, password);
+    if (success) {
+      toast({ title: "Login Successful!", description: "Welcome back." });
+      navigate('/profile');
+    } else {
+      toast({ title: "Login Failed", description: "Please check your credentials.", variant: "destructive" });
+    }
+  };
+
+  return (
+    <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4">
+      <motion.div 
+        initial={{ opacity: 0, y: 20 }} 
+        animate={{ opacity: 1, y: 0 }} 
+        transition={{ duration: 0.6 }}
+        className="w-full max-w-md"
+      >
+        <div className="text-center mb-8">
+          <h1 className="text-5xl md:text-6xl">Login</h1>
+          <p className="text-gray-500 mt-2">Access your account and wishlist.</p>
+        </div>
+        <form onSubmit={handleLogin} className="bg-white p-8 rounded-lg shadow-sm space-y-6">
+          <div className="space-y-2">
+            <label htmlFor="email" className="text-sm font-medium">Email</label>
+            <input
+              id="email"
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              placeholder="you@example.com"
+              required
+              className="w-full px-4 py-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-black"
+            />
+          </div>
+          <div className="space-y-2">
+            <label htmlFor="password" className="text-sm font-medium">Password</label>
+            <input
+              id="password"
+              type="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              placeholder="••••••••"
+              required
+              className="w-full px-4 py-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-black"
+            />
+          </div>
+          <Button type="submit" size="lg" className="w-full py-6 text-base">Login</Button>
+        </form>
+        <p className="text-center text-sm text-gray-500 mt-6">
+          Don't have an account? <Link to="#" className="font-medium text-black hover:underline">Sign up</Link>
+        </p>
+      </motion.div>
+    </div>
+  );
+};
+
+export default Login;

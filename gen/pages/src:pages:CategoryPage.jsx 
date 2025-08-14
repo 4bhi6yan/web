@@ -1,0 +1,105 @@
+import React, { useContext } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
+import { motion } from 'framer-motion';
+import { Heart } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { toast } from '@/components/ui/use-toast';
+import { CartContext } from '@/context/CartContext';
+import { ProductContext } from '@/context/ProductContext';
+import { WishlistContext } from '@/context/WishlistContext';
+
+const CategoryPage = ({ category }) => {
+  const { addToCart } = useContext(CartContext);
+  const { products } = useContext(ProductContext);
+  const { wishlist, toggleWishlist } = useContext(WishlistContext);
+  const navigate = useNavigate();
+
+  const handleAddToCart = (e, product) => {
+    e.preventDefault();
+    e.stopPropagation();
+    addToCart({ ...product, size: 'M', color: 'Default' });
+    toast({
+      title: "Added to Cart!",
+      description: `${product.name} has been added to your cart.`
+    });
+    navigate('/cart');
+  };
+
+  const handleToggleWishlist = (e, productId) => {
+    e.preventDefault();
+    e.stopPropagation();
+    toggleWishlist(productId);
+    const inWishlist = wishlist.some(item => item.id === productId);
+    toast({
+      title: inWishlist ? "Removed from Wishlist" : "Added to Wishlist",
+    });
+  };
+
+  const currentProducts = products.filter(p => p.gender === category);
+
+  return (
+    <div className="min-h-screen bg-white">
+      <section className="relative h-80 bg-gray-100 flex items-center justify-center">
+        <div className="text-center">
+          <motion.h1
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6 }}
+            className="text-6xl md:text-7xl mb-4"
+          >
+            {category}'s Collection
+          </motion.h1>
+          <motion.p
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: 0.1 }}
+            className="text-gray-500 text-lg"
+          >
+            Timeless pieces for the modern individual
+          </motion.p>
+        </div>
+      </section>
+
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+        <div className="flex items-center justify-between mb-8">
+          <p className="text-sm text-gray-500">{currentProducts.length} products</p>
+          <Link to="/shop">
+            <Button variant="outline">View All & Filter</Button>
+          </Link>
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
+          {currentProducts.map((product, index) => (
+            <motion.div
+              key={product.id}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6, delay: index * 0.1 }}
+              className="group"
+            >
+              <Link to={`/product/${product.id}`} className="block">
+                <div className="product-card bg-white rounded-lg overflow-hidden relative">
+                  <div className="aspect-[3/4] overflow-hidden bg-gray-100">
+                    <img  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" alt={product.name} src="https://images.unsplash.com/photo-1635865165118-917ed9e20936" />
+                    <Button variant="ghost" size="icon" className="absolute top-2 right-2 bg-white/50 hover:bg-white rounded-full" onClick={(e) => handleToggleWishlist(e, product.id)}>
+                      <Heart className={`h-5 w-5 ${wishlist.some(item => item.id === product.id) ? 'text-red-500 fill-current' : 'text-black'}`} />
+                    </Button>
+                  </div>
+                  <div className="p-4 text-center">
+                    <h3 className="font-sans font-medium text-lg mb-1">{product.name}</h3>
+                    <p className="text-gray-600 text-lg">${product.price}</p>
+                  </div>
+                  <div className="absolute bottom-4 right-4 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                    <Button onClick={(e) => handleAddToCart(e, product)}>Add to Cart</Button>
+                  </div>
+                </div>
+              </Link>
+            </motion.div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default CategoryPage;

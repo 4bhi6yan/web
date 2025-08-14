@@ -1,0 +1,55 @@
+import React, { createContext, useState, useContext, useEffect } from 'react';
+
+export const AuthContext = createContext();
+
+export const AuthProvider = ({ children }) => {
+  const [user, setUser] = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    try {
+      const storedUser = localStorage.getItem('cyloUser');
+      if (storedUser) {
+        setUser(JSON.parse(storedUser));
+      }
+    } catch (error) {
+      console.error("Failed to parse user from localStorage", error);
+      localStorage.removeItem('cyloUser');
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  const login = (email, password) => {
+    // This is a mock login. In a real app, you'd call an API.
+    if (email && password) {
+      const userData = { email, name: 'Jane Doe' };
+      localStorage.setItem('cyloUser', JSON.stringify(userData));
+      setUser(userData);
+      return true;
+    }
+    return false;
+  };
+
+  const logout = () => {
+    localStorage.removeItem('cyloUser');
+    setUser(null);
+  };
+
+  const value = {
+    user,
+    loading,
+    login,
+    logout,
+  };
+
+  return (
+    <AuthContext.Provider value={value}>
+      {!loading && children}
+    </AuthContext.Provider>
+  );
+};
+
+export const useAuth = () => {
+  return useContext(AuthContext);
+};

@@ -1,0 +1,152 @@
+import React, { useState, useContext } from 'react';
+import { useParams, Link, useNavigate } from 'react-router-dom';
+import { motion } from 'framer-motion';
+import { Heart, Share2, Truck, RotateCcw, Shield, Plus, Minus, ChevronLeft } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { toast } from '@/components/ui/use-toast';
+import { CartContext } from '@/context/CartContext';
+import { WishlistContext } from '@/context/WishlistContext';
+import { ProductContext } from '@/context/ProductContext';
+
+const ProductDetail = () => {
+  const { id } = useParams();
+  const { addToCart } = useContext(CartContext);
+  const { wishlist, toggleWishlist } = useContext(WishlistContext);
+  const { products } = useContext(ProductContext);
+  const navigate = useNavigate();
+  
+  const [selectedSize, setSelectedSize] = useState('M');
+  const [selectedColor, setSelectedColor] = useState('White');
+  const [quantity, setQuantity] = useState(1);
+  const [selectedImage, setSelectedImage] = useState(0);
+
+  const product = products.find(p => p.id === parseInt(id));
+
+  if (!product) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <h1 className="text-3xl">Product not found</h1>
+      </div>
+    );
+  }
+
+  const relatedProducts = products.filter(p => p.category === product.category && p.id !== product.id).slice(0, 3);
+  const isWishlisted = wishlist.some(item => item.id === product.id);
+
+  const handleToggleWishlist = () => {
+    toggleWishlist(product.id);
+    toast({
+      title: isWishlisted ? "Removed from Wishlist" : "Added to Wishlist",
+    });
+  };
+
+  const handleShare = () => {
+    const url = window.location.href;
+    navigator.clipboard.writeText(url).then(() => {
+      toast({ title: "Link Copied!", description: "Product link copied to clipboard." });
+    }, () => {
+      toast({ title: "Error", description: "Could not copy link.", variant: "destructive" });
+    });
+  };
+
+  const handleAddToCart = () => {
+    addToCart({ ...product, size: selectedSize, color: selectedColor }, quantity);
+    toast({
+      title: "Added to Cart!",
+      description: `${quantity} x ${product.name} (${selectedSize}, ${selectedColor}) has been added.`
+    });
+    navigate('/cart');
+  };
+
+  return (
+    <div className="min-h-screen bg-white">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+        <Link to="/shop" className="inline-flex items-center gap-2 text-sm text-gray-500 hover:text-black transition-colors mb-8">
+          <ChevronLeft className="h-4 w-4" /> Back to Shop
+        </Link>
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
+          <div className="space-y-4">
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.6 }} className="aspect-[3/4] bg-gray-100 rounded-lg overflow-hidden">
+              <img  className="w-full h-full object-cover" alt={product.name} src="https://images.unsplash.com/photo-1595872018818-97555653a011" />
+            </motion.div>
+            <div className="grid grid-cols-4 gap-4">
+              {product.images.map((image, index) => (
+                <button key={index} onClick={() => setSelectedImage(index)} className={`aspect-square bg-gray-100 rounded-lg overflow-hidden border-2 transition-colors ${selectedImage === index ? 'border-black' : 'border-transparent'}`}>
+                  <img  className="w-full h-full object-cover" alt={`${product.name} view ${index + 1}`} src="https://images.unsplash.com/photo-1595872018818-97555653a011" />
+                </button>
+              ))}
+            </div>
+          </div>
+          <div className="space-y-6">
+            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6, delay: 0.1 }}>
+              <h1 className="text-5xl md:text-6xl mb-4">{product.name}</h1>
+              <p className="text-3xl font-sans font-medium mb-6">${product.price}</p>
+              <p className="text-gray-600 leading-relaxed mb-6">{product.description}</p>
+            </motion.div>
+            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6, delay: 0.2 }} className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium mb-3">Size</label>
+                <div className="flex flex-wrap gap-2">
+                  {product.sizes.map((size) => (<button key={size} onClick={() => setSelectedSize(size)} className={`px-4 py-2 border rounded-md transition-colors text-sm ${selectedSize === size ? 'border-black bg-black text-white' : 'border-gray-300 hover:border-black'}`}>{size}</button>))}
+                </div>
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-3">Color</label>
+                <div className="flex flex-wrap gap-2">
+                  {product.colors.map((color) => (<button key={color} onClick={() => setSelectedColor(color)} className={`px-4 py-2 border rounded-md transition-colors text-sm ${selectedColor === color ? 'border-black bg-black text-white' : 'border-gray-300 hover:border-black'}`}>{color}</button>))}
+                </div>
+              </div>
+            </motion.div>
+            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6, delay: 0.3 }} className="space-y-4">
+              <div className="flex items-center gap-4">
+                <div className="flex items-center border border-gray-300 rounded-md">
+                  <button onClick={() => setQuantity(Math.max(1, quantity - 1))} className="p-3 hover:bg-gray-100 transition-colors"><Minus className="h-4 w-4" /></button>
+                  <span className="px-4 py-2 border-x border-gray-300 w-12 text-center">{quantity}</span>
+                  <button onClick={() => setQuantity(quantity + 1)} className="p-3 hover:bg-gray-100 transition-colors"><Plus className="h-4 w-4" /></button>
+                </div>
+                <Button size="lg" className="flex-1 py-6 text-base" onClick={handleAddToCart}>Add to Cart - ${product.price * quantity}</Button>
+              </div>
+              <div className="flex gap-4">
+                <Button variant="outline" size="lg" onClick={handleToggleWishlist} className="flex-1 py-6 text-base">
+                  <Heart className={`mr-2 h-5 w-5 ${isWishlisted ? 'text-red-500 fill-current' : ''}`} /> {isWishlisted ? 'Saved' : 'Save'}
+                </Button>
+                <Button variant="outline" size="lg" onClick={handleShare} className="flex-1 py-6 text-base">
+                  <Share2 className="mr-2 h-5 w-5" /> Share
+                </Button>
+              </div>
+            </motion.div>
+            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6, delay: 0.5 }} className="border-t pt-6 space-y-4">
+              <div className="flex items-center gap-3 text-sm"><Truck className="h-5 w-5" /><span>Free shipping on orders over $100</span></div>
+              <div className="flex items-center gap-3 text-sm"><RotateCcw className="h-5 w-5" /><span>30-day return policy</span></div>
+              <div className="flex items-center gap-3 text-sm"><Shield className="h-5 w-5" /><span>Secure payment guaranteed</span></div>
+            </motion.div>
+          </div>
+        </div>
+        <section className="mt-24">
+          <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} transition={{ duration: 0.6 }} className="text-center mb-12">
+            <h2 className="text-5xl md:text-6xl mb-4">You Might Also Like</h2>
+          </motion.div>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            {relatedProducts.map((relatedProduct, index) => (
+              <motion.div key={relatedProduct.id} initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} transition={{ duration: 0.6, delay: index * 0.1 }} className="group">
+                <Link to={`/product/${relatedProduct.id}`} className="block">
+                  <div className="product-card bg-white rounded-lg overflow-hidden relative">
+                    <div className="aspect-[3/4] overflow-hidden bg-gray-100">
+                      <img  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" alt={relatedProduct.name} src="https://images.unsplash.com/photo-1635865165118-917ed9e20936" />
+                    </div>
+                    <div className="p-4 text-center">
+                      <h3 className="font-sans font-medium text-lg mb-1">{relatedProduct.name}</h3>
+                      <p className="text-gray-600 text-lg">${relatedProduct.price}</p>
+                    </div>
+                  </div>
+                </Link>
+              </motion.div>
+            ))}
+          </div>
+        </section>
+      </div>
+    </div>
+  );
+};
+
+export default ProductDetail;

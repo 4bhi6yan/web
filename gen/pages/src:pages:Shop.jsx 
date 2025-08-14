@@ -1,0 +1,187 @@
+import React, { useState, useContext, useMemo } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
+import { motion } from 'framer-motion';
+import { Filter, Grid, List, ChevronDown, X, Heart } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { toast } from '@/components/ui/use-toast';
+import { CartContext } from '@/context/CartContext';
+import { ProductContext } from '@/context/ProductContext';
+import { WishlistContext } from '@/context/WishlistContext';
+import { Slider } from "@/components/ui/slider";
+
+const Shop = () => {
+  const [viewMode, setViewMode] = useState('grid');
+  const { products, categories, filters, setFilters } = useContext(ProductContext);
+  const { addToCart } = useContext(CartContext);
+  const { wishlist, toggleWishlist } = useContext(WishlistContext);
+  const navigate = useNavigate();
+
+  const handleAddToCart = (e, product) => {
+    e.preventDefault();
+    e.stopPropagation();
+    addToCart({ ...product, size: 'M', color: 'Default' });
+    toast({
+      title: "Added to Cart!",
+      description: `${product.name} has been added to your cart.`
+    });
+    navigate('/cart');
+  };
+
+  const handleToggleWishlist = (e, productId) => {
+    e.preventDefault();
+    e.stopPropagation();
+    toggleWishlist(productId);
+    const inWishlist = wishlist.some(item => item.id === productId);
+    toast({
+      title: inWishlist ? "Removed from Wishlist" : "Added to Wishlist",
+    });
+  };
+
+  const filteredProducts = useMemo(() => {
+    const query = filters.searchQuery.toLowerCase();
+    return products
+      .filter(p => filters.category === 'All' || p.category === filters.category)
+      .filter(p => p.price >= filters.priceRange[0] && p.price <= filters.priceRange[1])
+      .filter(p => {
+        if (!query) return true;
+        return (
+          p.name.toLowerCase().includes(query) ||
+          p.category.toLowerCase().includes(query) ||
+          p.colors.some(color => color.toLowerCase().includes(query))
+        );
+      })
+      .sort((a, b) => {
+        switch (filters.sortBy) {
+          case 'price-low': return a.price - b.price;
+          case 'price-high': return b.price - a.price;
+          case 'name': return a.name.localeCompare(b.name);
+          default: return 0;
+        }
+      });
+  }, [products, filters]);
+
+  const resetFilters = () => {
+    setFilters({
+      category: 'All',
+      priceRange: [0, 300],
+      sortBy: 'featured',
+      searchQuery: ''
+    });
+  };
+
+  return (
+    <div className="min-h-screen bg-white">
+      <section className="relative h-80 bg-gray-100 flex items-center justify-center">
+        <div className="text-center">
+          <motion.h1 initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6 }} className="text-6xl md:text-7xl mb-4">Shop</motion.h1>
+          <motion.p initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6, delay: 0.1 }} className="text-gray-500 text-lg">Discover our carefully curated selection</motion.p>
+        </div>
+      </section>
+
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+        <div className="flex flex-col lg:flex-row gap-8">
+          {/* Filters Sidebar */}
+          <aside className="w-full lg:w-1/4">
+            <div className="sticky top-24 space-y-8">
+              <div className="flex justify-between items-center">
+                <h3 className="text-2xl">Filters</h3>
+                <Button variant="ghost" size="sm" onClick={resetFilters}>Reset</Button>
+              </div>
+              <div>
+                <h4 className="font-medium mb-4 text-lg">Category</h4>
+                <div className="flex flex-col gap-2">
+                  {categories.map((category) => (
+                    <Button key={category} variant={filters.category === category ? "default" : "ghost"} className="justify-start" onClick={() => setFilters(prev => ({ ...prev, category }))}>{category}</Button>
+                  ))}
+                </div>
+              </div>
+              <div>
+                <h4 className="font-medium mb-4 text-lg">Price Range</h4>
+                <Slider
+                  defaultValue={[0, 300]}
+                  max={300}
+                  step={10}
+                  value={filters.priceRange}
+                  onValueChange={(value) => setFilters(prev => ({ ...prev, priceRange: value }))}
+                />
+                <div className="flex justify-between text-sm text-gray-500 mt-2">
+                  <span>${filters.priceRange[0]}</span>
+                  <span>${filters.priceRange[1]}</span>
+                </div>
+              </div>
+            </div>
+          </aside>
+
+          {/* Products Grid */}
+          <main className="w-full lg:w-3/4">
+            <div className="flex flex-col sm:flex-row items-center justify-between mb-8 gap-4">
+              <p className="text-gray-500">{filteredProducts.length} products</p>
+              <div className="flex items-center gap-4">
+                <div className="relative">
+                  <select value={filters.sortBy} onChange={(e) => setFilters(prev => ({ ...prev, sortBy: e.target.value }))} className="appearance-none bg-white border border-gray-300 rounded-md px-4 py-2 pr-8 text-sm focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent">
+                    <option value="featured">Featured</option>
+                    <option value="price-low">Price: Low to High</option>
+                    <option value="price-high">Price: High to Low</option>
+                    <option value="name">Name A-Z</option>
+                  </select>
+                  <ChevronDown className="absolute right-2 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400 pointer-events-none" />
+                </div>
+                <div className="flex border border-gray-300 rounded-md overflow-hidden">
+                  <Button variant={viewMode === 'grid' ? 'secondary' : 'ghost'} size="sm" onClick={() => setViewMode('grid')} className="rounded-none border-0"><Grid className="h-4 w-4" /></Button>
+                  <Button variant={viewMode === 'list' ? 'secondary' : 'ghost'} size="sm" onClick={() => setViewMode('list')} className="rounded-none border-0"><List className="h-4 w-4" /></Button>
+                </div>
+              </div>
+            </div>
+
+            {filters.searchQuery && (
+              <div className="mb-8 flex items-center gap-2">
+                <p>Searching for: "{filters.searchQuery}"</p>
+                <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => setFilters(prev => ({ ...prev, searchQuery: '' }))}><X className="h-4 w-4" /></Button>
+              </div>
+            )}
+
+            <div className={`grid gap-8 ${viewMode === 'grid' ? 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3' : 'grid-cols-1'}`}>
+              {filteredProducts.map((product, index) => (
+                <motion.div
+                  key={product.id}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.6, delay: index * 0.05 }}
+                  className={`group ${viewMode === 'list' ? 'flex items-center' : ''}`}
+                >
+                  <Link to={`/product/${product.id}`} className="block w-full">
+                    <div className={`product-card bg-white rounded-lg overflow-hidden relative ${viewMode === 'list' ? 'flex gap-6 w-full' : ''}`}>
+                      <div className={`relative overflow-hidden bg-gray-100 flex-shrink-0 ${viewMode === 'list' ? 'w-48 h-64' : 'aspect-[3/4]'}`}>
+                        <img  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" alt={product.name} src="https://images.unsplash.com/photo-1635865165118-917ed9e20936" />
+                        <Button variant="ghost" size="icon" className="absolute top-2 right-2 bg-white/50 hover:bg-white rounded-full" onClick={(e) => handleToggleWishlist(e, product.id)}>
+                          <Heart className={`h-5 w-5 ${wishlist.some(item => item.id === product.id) ? 'text-red-500 fill-current' : 'text-black'}`} />
+                        </Button>
+                      </div>
+                      <div className={`p-4 ${viewMode === 'list' ? 'flex-1' : 'text-center'}`}>
+                        <h3 className="font-sans font-medium text-lg mb-1">{product.name}</h3>
+                        <p className="text-gray-600 text-lg">${product.price}</p>
+                        {viewMode === 'list' && <p className="text-gray-500 text-sm mt-2">{product.description.substring(0, 100)}...</p>}
+                      </div>
+                      {viewMode === 'grid' && (
+                        <div className="absolute bottom-4 right-4 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                          <Button onClick={(e) => handleAddToCart(e, product)}>Add to Cart</Button>
+                        </div>
+                      )}
+                    </div>
+                  </Link>
+                  {viewMode === 'list' && (
+                    <div className="pl-4">
+                      <Button onClick={(e) => handleAddToCart(e, product)}>Add to Cart</Button>
+                    </div>
+                  )}
+                </motion.div>
+              ))}
+            </div>
+          </main>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default Shop;

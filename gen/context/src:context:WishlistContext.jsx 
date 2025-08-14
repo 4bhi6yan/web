@@ -1,0 +1,46 @@
+import React, { createContext, useState, useEffect, useContext } from 'react';
+import { ProductContext } from './ProductContext';
+
+export const WishlistContext = createContext();
+
+export const WishlistProvider = ({ children }) => {
+  const { products } = useContext(ProductContext);
+  const [wishlist, setWishlist] = useState([]);
+
+  useEffect(() => {
+    try {
+      const localData = localStorage.getItem('cyloWishlist');
+      const parsedData = localData ? JSON.parse(localData) : [];
+      // Filter out items that no longer exist in products
+      const validWishlist = parsedData.filter(id => products.some(p => p.id === id));
+      const wishlistProducts = validWishlist.map(id => products.find(p => p.id === id));
+      setWishlist(wishlistProducts);
+    } catch (error) {
+      console.error("Could not parse wishlist data from localStorage", error);
+      setWishlist([]);
+    }
+  }, [products]);
+
+  useEffect(() => {
+    const wishlistIds = wishlist.map(item => item.id);
+    localStorage.setItem('cyloWishlist', JSON.stringify(wishlistIds));
+  }, [wishlist]);
+
+  const toggleWishlist = (productId) => {
+    setWishlist(prevWishlist => {
+      const isInWishlist = prevWishlist.some(item => item.id === productId);
+      if (isInWishlist) {
+        return prevWishlist.filter(item => item.id !== productId);
+      } else {
+        const productToAdd = products.find(p => p.id === productId);
+        return productToAdd ? [...prevWishlist, productToAdd] : prevWishlist;
+      }
+    });
+  };
+
+  return (
+    <WishlistContext.Provider value={{ wishlist, toggleWishlist }}>
+      {children}
+    </WishlistContext.Provider>
+  );
+};

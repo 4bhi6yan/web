@@ -1,0 +1,33 @@
+import React, { createContext, useState } from 'react';
+
+export const ProductContext = createContext();
+
+const allProducts = [
+  { id: 1, name: "Essential White Tee", price: 29, category: "Tops", gender: "Men", image: "Minimalist white cotton t-shirt on clean background", description: "Our signature essential tee crafted from premium organic cotton.", features: ["100% Organic Cotton", "Relaxed Fit"], sizes: ["S", "M", "L", "XL"], colors: ["White", "Black"], images: ["Minimalist white cotton t-shirt on clean background", "Close-up of white t-shirt fabric", "Model wearing white t-shirt", "Styled white t-shirt"] },
+  { id: 2, name: "Classic Black Jeans", price: 89, category: "Denim", gender: "Men", image: "Premium black denim jeans styled elegantly", description: "Timeless black jeans with a modern slim fit.", features: ["Stretch Denim", "5-Pocket Styling"], sizes: ["30", "32", "34", "36"], colors: ["Black"], images: ["Premium black denim jeans styled elegantly", "Close-up of denim texture", "Model wearing black jeans", "Detail of black jeans pocket"] },
+  { id: 3, name: "Wool Blend Coat", price: 199, category: "Outerwear", gender: "Men", image: "Elegant grey wool coat hanging on minimalist rack", description: "A sophisticated wool-blend coat for sharp, cold-weather style.", features: ["Italian Wool Blend", "Fully Lined"], sizes: ["S", "M", "L"], colors: ["Grey", "Camel"], images: ["Elegant grey wool coat hanging on minimalist rack", "Detail of coat lapel", "Model wearing grey coat", "Back view of grey coat"] },
+  { id: 7, name: "Linen Shirt", price: 69, category: "Shirts", gender: "Men", image: "Crisp white linen shirt with natural texture", description: "A breathable linen shirt, perfect for warm weather.", features: ["100% Linen", "Button-Down Collar"], sizes: ["S", "M", "L", "XL"], colors: ["White", "Beige"], images: ["Crisp white linen shirt with natural texture", "Close-up of linen fabric", "Model wearing linen shirt", "Detail of shirt cuff"] },
+  { id: 4, name: "Silk Blouse", price: 79, category: "Tops", gender: "Women", image: "Luxurious white silk blouse with clean styling", description: "An elegant blouse made from pure, lustrous silk.", features: ["100% Mulberry Silk", "Hidden Placket"], sizes: ["XS", "S", "M", "L"], colors: ["White", "Champagne"], images: ["Luxurious white silk blouse with clean styling", "Detail of silk fabric", "Model wearing silk blouse", "Styled silk blouse"] },
+  { id: 8, name: "Midi Dress", price: 119, category: "Dresses", gender: "Women", image: "Elegant black midi dress on minimalist background", description: "A versatile and flattering midi dress for any occasion.", features: ["Flowy Viscose Fabric", "Adjustable Straps"], sizes: ["XS", "S", "M", "L"], colors: ["Black", "Red"], images: ["Elegant black midi dress on minimalist background", "Full view of midi dress", "Model wearing midi dress", "Detail of dress fabric"] },
+  { id: 6, name: "Tailored Trousers", price: 99, category: "Bottoms", gender: "Women", image: "Elegant black tailored trousers on hanger", description: "Sharp, tailored trousers that mean business.", features: ["High-Waisted", "Creased Legs"], sizes: ["2", "4", "6", "8", "10"], colors: ["Black", "Navy"], images: ["Elegant black tailored trousers on hanger", "Detail of trouser waist", "Model wearing tailored trousers", "Styled trousers outfit"] },
+  { id: 5, name: "Cashmere Sweater", price: 149, category: "Knitwear", gender: "Women", image: "Soft beige cashmere sweater folded neatly", description: "An incredibly soft sweater made from pure cashmere.", features: ["100% Cashmere", "Ribbed Trims"], sizes: ["XS", "S", "M", "L"], colors: ["Beige", "Grey"], images: ["Soft beige cashmere sweater folded neatly", "Close-up of cashmere knit", "Model wearing cashmere sweater", "Styled cashmere sweater"] },
+];
+
+const allCategories = ["All", "Tops", "Denim", "Outerwear", "Dresses", "Bottoms", "Knitwear", "Shirts"];
+
+export const ProductProvider = ({ children }) => {
+  const [products] = useState(allProducts);
+  const [categories] = useState(allCategories);
+  const [filters, setFilters] = useState({
+    category: 'All',
+    priceRange: [0, 300],
+    sortBy: 'featured',
+    searchQuery: ''
+  });
+
+  return (
+    <ProductContext.Provider value={{ products, categories, filters, setFilters }}>
+      {children}
+    </ProductContext.Provider>
+  );
+};
